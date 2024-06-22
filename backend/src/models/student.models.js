@@ -16,7 +16,7 @@ const studentSchema = new Schema(
         class: String,
         required: true,
        },
-       class:{
+       studentClass:{
         trype: String,
         required: true,
         lowercase:true,
@@ -67,7 +67,7 @@ const studentSchema = new Schema(
 
 // hooks 
 studentSchema.pre("save", async function(next){
-    if(!this.isModified("passwword")) return next():
+    if(!this.isModified("passwword")) return next();
 
     this.passwword = await bcrypt.hash(this.passwword,10)
     next()
@@ -82,7 +82,7 @@ studentSchema.methods.generateAccessToken = function(){
         {
             _id: this._id,
             email: this.email,
-            name: this.username,
+            name: this.name,
             contactNumber: this.contactNumber
         },
         process.env.ACCESS_TOKEN_SECRET,

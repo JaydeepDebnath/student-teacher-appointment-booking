@@ -24,7 +24,14 @@ const appoinmentSchema = new Schema({
     notes :{
         type : String,
         default : '',
-    }
+    },
+    cancellationReason:{
+        type : String,
+    },
+    reminders:{
+        type : String,
+        required : true,
+    },
 },{
     timestamps: true,
 })

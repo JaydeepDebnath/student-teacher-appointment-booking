@@ -42,6 +42,15 @@ const teacherSchema = new Schema(
         password:{
             type : String,
             required : (true,"Password is required")
+        },
+        role:{
+            type : String,
+            enum : ['admin','teacher'],
+            default: 'teacher'
+        },
+        googleCredentials: {
+            type: Object,
+            required: true
         }
          
     },{
@@ -50,14 +59,14 @@ const teacherSchema = new Schema(
 )
 
 teacherSchema.pre("save", async function(next){
-    if(!this.isModified("passwword")) return next():
+    if(!this.isModified("password")) return next();
 
-    this.passwword = await bcrypt.hash(this.passwword,10)
-    next()
+    this.password = await bcrypt.hash(this.password,10);
+    next();
 })
 
 teacherSchema.method.isPasswordCorrect = async (password)=>{
-await bcrypt.compare(password,this.password)
+return await bcrypt.compare(password,this.password)
 }
 
 teacherSchema.methods.generateAccessToken = function(){

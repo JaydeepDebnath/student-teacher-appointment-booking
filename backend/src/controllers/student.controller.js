@@ -1,22 +1,68 @@
 import {asyncHandler} from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
-import { Teacher } from "../models/teacher.models.js"
+import { Student } from "../models/student.models.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 
 import jwt from "jsonwebtoken"
 import mongoose from "mongoose"
-import { response } from "express"
 
+const refreshAccessToken = asyncHandler(async(req,res)=>
+    {
+        const incomingRefreshToken = req.cookies.
+        refreshToken || req.body.refreshToken
+    
+        if(!incomingRefreshToken)
+        {
+            throw new ApiError(401,"Invalid request ")
+        }
+    
+        const decodedToken = jwt.verify
+        (incomingRefreshToken,
+        process.env.REFRESH_TOKEN_SECRET)
+    
+        const student = await Student.findById(decodedToken?._id)
+    
+        if(!student) 
+        {
+            throw new ApiError(401,"Invalid refresh token")
+        }
+    
+        if(incomingRefreshToken !==student?.refreshToken)
+        {
+            throw new ApiError(401,"Refresh token is Expired")
+        }
+    
+    
+        const options =    
+        {
+            httpOnly : ture,
+            secure : true
+        }
+        const {accessToken,newRefreshToken} = await generateAccessAndRefreshToken(student._id)
+    
+        return res
+        .status(200)
+        .cookie("accessToken",accessToken,options)
+        .cookie("refreshToken",newRefreshToken,options)
+        .json(
+            new ApiResponse(
+                200,
+                { accessToken, refreshToken: newRefreshToken},
+                " Access token refreshed "
+                 
+            )
+        )
+});
 
 const generateAccessAndRefreshToken = async(userId)=>
     {
         try {
-          const teacher = await Teacher.findById(userId) 
-          const accessToken = Teacher.generateAccessToken()
-          const refreshToken = Teacher.generateRefreshToken()
+          const student = await Student.findById(userId) 
+          const accessToken = Student.generateAccessToken()
+          const refreshToken = Student.generateRefreshToken()
     
-          teacher.refreshToken = refreshToken  //get refresh token from user
-          await teacher.save({validateBeforeSave : false})    // .save , save to the db.validteBeforeSave dosen't check any validation
+          student.refreshToken = refreshToken  //get refresh token from user
+          await student.save({validateBeforeSave : false})    // .save , save to the db.validteBeforeSave dosen't check any validation
     
           return {accessToken,refreshToken}
     
@@ -25,70 +71,72 @@ const generateAccessAndRefreshToken = async(userId)=>
         }
 };
 
-const registerTeacher = asyncHandler( async ( req,res )=>{
-    const { name, email, contactNumber, password , department , subject } = req.body
+const registerStudent = asyncHandler( async ( req,res )=>{
+    const { name, email,studentClass , contactNumber, password , department ,achademic_year, subject } = req.body
     if (
-        [ name, email, contactNumber,department,subject, password]
+        [ name, email,studentClass, contactNumber,department,subject, achademic_year, password]
         .some((field) => field?.trim() === "")
     ) {
         throw new ApiError(404,"All fileds are requird ")
     }
 
-    const existedTeacher = await Teacher.findOne({
+    const existedStudent = await Student.findOne({
         $or: [{email},{contactNumber}]
     })
 
-    if(!existedTeacher){
+    if(!existedStudent){
         throw new ApiError(400,`User with ${email} or ${contactNumber} already exists`)
     }
 
-    const teacher = await Teacher.create({
+    const student = await Student.create({
         name: name.toLowerCase(),
         email,
+        studentClass,
         contactNumber,
         password,
         department,
         subject,
+        achademic_year,
     })
 
-    const createdTeacher= await Teacher.findById(teacher._id).select(
+    const createdStudent = await Student.findById(student._id).select(
         "-password -refreshToken"
     )
 
-    if (!createdTeacher){
+    if (!createdStudent){
         throw new ApiError(500," Something went wrong ")
     }
 
     return res
     .status(201)
     .json(
-        new ApiResponse(200, createdTeacher, "Teacher details registered Successfully")
+        new ApiResponse(200, createdStudent, "Student details registered Successfully")
     )
 });
 
-const loginTeacher = asyncHandler( async (req,res)=>{
+const loginStudent = asyncHandler( async (req,res)=>{
     const { username,email,contactNumber,password } = req.body
 
     if (!( username || email || contactNumber)){
         throw new ApiError(400,"Username or Password or Contact Number is required ")
     }
 
-    const teacher = await Teacher.findOne({
+    const student = await Student.findOne({
         $or : [{username},{email},{contactNumber}]
     })
 
-    if(!teacher){
+    if(!student){
         throw new ApiError(400,"Teacher does not exists")
     }
 
-    const isPasswordValid = await teacher.isPasswordCorrect(password)
+    const isPasswordValid = await student.isPasswordCorrect(password)
     if(!isPasswordValid){
         throw new ApiError(400,"Invalid user credentials")
     }
 
-    const { accessToken,refreshToken } = await generateAccessAndRefreshToken(teacher._id)
+    const { accessToken,refreshToken } = await generateAccessAndRefreshToken(student._id)
 
-    const loggedInUser = await Teacher.findById(teacher._id).select
+    const loggedInStudent = await Student.findById(student._id).select
     ("-password -refreshToken")
 
     const options = {
@@ -103,17 +151,17 @@ const loginTeacher = asyncHandler( async (req,res)=>{
        .json(
         new ApiResponse(
             200,{
-                teacher : loggedInUser,accessToken,
+                student : loggedInStudent,accessToken,
                 refreshToken
             },
-            "Teacher logged in sucessfully"
+            "Student logged in sucessfully"
         )
        )
 });
 
 const logout = asyncHandler( async ( req,res )=>{
-    await Teacher.findByIdAndUpdate(
-        req.teacher._id,   // query
+    await Student.findByIdAndUpdate(
+        req.student._id,   // query
         {
             $set :
             {
@@ -137,54 +185,6 @@ const logout = asyncHandler( async ( req,res )=>{
        .json(new ApiResponse(200,{},"Teacher logged out"))
 });
 
-const refreshAccessToken = asyncHandler(async(req,res)=>
-    {
-        const incomingRefreshToken = req.cookies.
-        refreshToken || req.body.refreshToken
-    
-        if(!incomingRefreshToken)
-        {
-            throw new ApiError(401,"Invalid request ")
-        }
-    
-        const decodedToken = jwt.verify
-        (incomingRefreshToken,
-        process.env.REFRESH_TOKEN_SECRET)
-    
-        const teacher = await Teacher.findById(decodedToken?._id)
-    
-        if(!teacher) 
-        {
-            throw new ApiError(401,"Invalid refresh token")
-        }
-    
-        if(incomingRefreshToken !==teacher?.refreshToken)
-        {
-            throw new ApiError(401,"Refresh token is Expired")
-        }
-    
-    
-        const options =    
-        {
-            httpOnly : ture,
-            secure : true
-        }
-        const {accessToken,newRefreshToken} = await generateAccessAndRefreshToken(teacher._id)
-    
-        return res
-        .status(200)
-        .cookie("accessToken",accessToken,options)
-        .cookie("refreshToken",newRefreshToken,options)
-        .json(
-            new ApiResponse(
-                200,
-                { accessToken, refreshToken: newRefreshToken},
-                " Access token refreshed "
-                 
-            )
-        )
-});
-    
 const changeCurrentPassword = asyncHandler(async(req,
     res)=>{
         const {oldPassword,newPassword} = req.body
@@ -193,16 +193,16 @@ const changeCurrentPassword = asyncHandler(async(req,
             //     throw new ApiError(400,"Both password must be equal")
             // }
     
-        const teacher = await Teacher.findById(req.teacher?._id)
-        const isPasswordCorrect = await teacher
+        const student = await Student.findById(req.student?._id)
+        const isPasswordCorrect = await student
         .isPasswordCorrect(oldPassword)
     
         if(!isPasswordCorrect){
             throw new ApiError(400,"Invalid old password")
         }
     
-        teacher.password = newPassword
-        await teacher.save({validateBeforeSave : false})
+        student.password = newPassword
+        await student.save({validateBeforeSave : false})
     
         return res
         .status(200)
@@ -217,8 +217,8 @@ const updateAccountDetails = asyncHandler(async(req,
            throw new ApiError(400,"All fields are required") 
         }
 
-        const user = await Teacher.findByIdAndUpdate(
-            req.teacher?._id,
+        const student = await Student.findByIdAndUpdate(
+            req.student?._id,
             {
                 $set:{
                     fullName,
@@ -237,25 +237,25 @@ const updateAccountDetails = asyncHandler(async(req,
 });
 
 const getAppoinment = asyncHandler( async ( req,res )=>{
-    const getTeacherAppoinment = await Teacher.aggregate([
+    const getStudentAppoinment = await Student.aggregate([
         {
             $match : {
                 _id : new mongoose.Types.
-                ObjectId(req.teacher._id)
+                ObjectId(req.student._id)
             }
         },
         {
             $lookup:"appoinments",
             localFiled : "_id",
-            foreignField: "teacher",
+            foreignField: "student",
             as : "appoinment",
             pipeline:[
                 {
                     $lookup:{
-                        from:"teachers",
-                        localFiled:"teacher",
+                        from:"students",
+                        localFiled:"student",
                         foreignField: "_id",
-                        as : "teacher",
+                        as : "student",
                         
                    }
                 },
@@ -264,8 +264,8 @@ const getAppoinment = asyncHandler( async ( req,res )=>{
                 },
                 {
                     $lookup:{
-                        from : "students",
-                        localFiled:"appointments.student",
+                        from : "teachers",
+                        localFiled:"appointments.teacher",
                         foreignField:"_id",
                         as:"appointments.student"
                     }
@@ -275,9 +275,8 @@ const getAppoinment = asyncHandler( async ( req,res )=>{
                         "appointments._id": 1,
                         "appointments.datetime": 1,
                         "appointments.notes": 1,
-                        "appointments.student.fullName": 1,
-                        "appointments.student.username": 1,
-                        "appointments.student.contactNumber": 1
+                        "appointments.teacher.username": 1,
+                        "appointments.teacher.contactNumber": 1
                     }
                 },
             ]
@@ -287,17 +286,19 @@ const getAppoinment = asyncHandler( async ( req,res )=>{
 
     return res
     .status(200)
-    .json(new ApiResponse(200,getTeacherAppoinment,
+    .json(new ApiResponse(200,getStudentAppoinment,
     "Appointments geeting sucessfully "))
 })
 
+
+
 export {
-generateAccessAndRefreshToken,
-registerTeacher,
-loginTeacher,
-logout,
-refreshAccessToken,
-changeCurrentPassword,
-updateAccountDetails,
-getAppoinment,
+    generateAccessAndRefreshToken,
+    refreshAccessToken,
+    registerStudent,
+    loginStudent,
+    logout,
+    changeCurrentPassword,
+    updateAccountDetails,
+    getAppoinment
 }
