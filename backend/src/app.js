@@ -16,3 +16,12 @@ app.use(express.static("public"))
 app.use(cookieParser())
 
 // import routes
+
+import studentRouter from './routes/student.routes.js'
+import teacherRouter from './routes/teacher.routes.js'
+
+app.use("/api/student",studentRouter)
+app.use("/api/teacher",teacherRouter)
+
+
+export default app;

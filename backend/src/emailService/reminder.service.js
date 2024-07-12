@@ -1,6 +1,6 @@
-import { ApiError } from "../utils/ApiError";
-import { asyncHandler } from "../utils/asyncHandler";
-import { sendEmail } from "./email.sender.";
+import { ApiError } from "../utils/ApiError.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { sendEmail } from './email.sender.js';
 
 export const sendAppoinmentReminderEmail = asyncHandler( async ( req,res )=>{
     const recipientEmail = appoinment.student.email;

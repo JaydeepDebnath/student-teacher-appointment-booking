@@ -1,100 +1,104 @@
-import mongoose, { Schema } from "mongoose" 
-import jwt from "jsonwebtoken"
-import bcrypt from "bcrypt"
+import mongoose, { Schema } from "mongoose";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 const teacherSchema = new Schema(
     {
-        username :  {
-            type : String,
+        username: {
+            type: String,
             required: true,
             unique: true,
             lowercase: true,
-            trim: true, 
+            trim: true,
             index: true
-           },
-           fullname:{
-            type : String,
-            required: true,
-           },
-        email:{
-            type : String,
-            required: true,
-            index: true,
         },
-        contactNumber:{
-            type: Number,
-            required: true,
+        fullname: {
+            type: String,
+            required: true
         },
-        department:{
-            type : String,
-            required: true,
-        },
-        subject:{
+        email: {
             type: String,
             required: true,
-
+            unique: true,
+            index: true
         },
-        appoinment:[
+        contactNumber: {
+            type: String, 
+            required: true
+        },
+        department: {
+            type: String,
+            required: true
+        },
+        subject: {
+            type: String,
+            required: true
+        },
+        appoinment: [
             {
                 type: Schema.Types.ObjectId,
-                ref : "Appoinment",
-            }],
-        password:{
-            type : String,
-            required : (true,"Password is required")
+                ref: "Appoinment" 
+            }
+        ],
+        password: {
+            type: String,
+            required: true
         },
-        role:{
-            type : String,
-            enum : ['admin','teacher'],
+        role: {
+            type: String,
+            enum: ['admin', 'teacher'],
             default: 'teacher'
         },
         googleCredentials: {
-            type: Object,
-            required: true
+            type: Schema.Types.Mixed,
+            // required: true
         }
-         
-    },{
-        timestamps:true
+    },
+    {
+        timestamps: true
     }
-)
+);
 
-teacherSchema.pre("save", async function(next){
-    if(!this.isModified("password")) return next();
+// Hash password
+teacherSchema.pre("save", async function(next) {
+    if (!this.isModified("password")) return next();
 
-    this.password = await bcrypt.hash(this.password,10);
+    this.password = await bcrypt.hash(this.password, 10);
     next();
-})
+});
 
-teacherSchema.method.isPasswordCorrect = async (password)=>{
-return await bcrypt.compare(password,this.password)
-}
+// method to check password
+teacherSchema.methods.isPasswordCorrect = async function(password) {
+    return await bcrypt.compare(password, this.password);
+};
 
-teacherSchema.methods.generateAccessToken = function(){
+// Generate access token
+teacherSchema.methods.generateAccessToken = function() {
     return jwt.sign(
         {
             _id: this._id,
             email: this.email,
-            name: this.username,
+            username: this.username,
             contactNumber: this.contactNumber
         },
         process.env.ACCESS_TOKEN_SECRET,
         {
             expiresIn: process.env.ACCESS_TOKEN_EXPIRY
         }
-    )
-}
-teacherSchema.methods.generateRefreshToken = function(){
+    );
+};
+
+// Generate refresh token
+teacherSchema.methods.generateRefreshToken = function() {
     return jwt.sign(
         {
-            _id: this._id,
-            
+            _id: this._id
         },
         process.env.REFRESH_TOKEN_SECRET,
         {
             expiresIn: process.env.REFRESH_TOKEN_EXPIRY
         }
-    )
-}
+    );
+};
 
-
-export const Teacher = mongoose.model("Teacher",teacherSchema)
+export const Teacher = mongoose.model("Teacher", teacherSchema);

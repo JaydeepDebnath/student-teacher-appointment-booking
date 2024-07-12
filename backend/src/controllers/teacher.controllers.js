@@ -26,9 +26,9 @@ const generateAccessAndRefreshToken = async(userId)=>
 };
 
 const registerTeacher = asyncHandler( async ( req,res )=>{
-    const { name, email, contactNumber, password , department , subject } = req.body
+    const { username, email, contactNumber,fullname, password , department , subject } = req.body
     if (
-        [ name, email, contactNumber,department,subject, password]
+        [ username, email,fullname, contactNumber,department,subject, password]
         .some((field) => field?.trim() === "")
     ) {
         throw new ApiError(404,"All fileds are requird ")
@@ -43,7 +43,8 @@ const registerTeacher = asyncHandler( async ( req,res )=>{
     }
 
     const teacher = await Teacher.create({
-        name: name.toLowerCase(),
+        username: username.toLowerCase(),
+        fullname,
         email,
         contactNumber,
         password,
@@ -62,7 +63,7 @@ const registerTeacher = asyncHandler( async ( req,res )=>{
     return res
     .status(201)
     .json(
-        new ApiResponse(200, createdTeacher, "Teacher details registered Successfully")
+        new ApiResponse(200, createdTeacher, "Teacher registered Successfully")
     )
 });
 

@@ -1,7 +1,7 @@
 import { ApiError } from '../utils/ApiError.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import jwt from 'jsonwebtoken'
-import { OAuth2Client, OAuth2Client } from 'google-auth-library'
+import { OAuth2Client} from 'google-auth-library'
 import { google } from 'googleapis'
 import fs from 'fs'
 import { Teacher } from '../models/teacher.models.js'

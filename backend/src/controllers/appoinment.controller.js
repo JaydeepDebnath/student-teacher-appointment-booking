@@ -1,6 +1,6 @@
 import {asyncHandler} from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
-import { Appoinment } from "../models/appoinment.models.js"
+import { Appointment } from "../models/appoinment.models.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { Teacher } from "../models/teacher.models.js"
 import { Student } from "../models/student.models.js"
@@ -35,7 +35,7 @@ try {
     }
 
     const calenderResponse = await createGoogleCalendarEvent( req,res )
-    const newAppoinment = new Appoinment({
+    const newAppoinment = new Appointment({
         student:studentId,
         teacher:teacherId,
         datetime,
@@ -72,7 +72,7 @@ const cancelAppoinment = asyncHandler( async (req,res)=>{
             throw new ApiError(400,"Appoinment Id is required");
         }
 
-        const deleteAppoinment = await Appoinment.findByOne({
+        const deleteAppoinment = await Appointment.findByOne({
             _id:appoinmentId,
             teacher: teacherId,
         });
@@ -81,7 +81,7 @@ const cancelAppoinment = asyncHandler( async (req,res)=>{
             throw new ApiError(304,"Appointment not found or does not belong to the teacher")
         }
         
-        await Appoinment.findByIdAndDelete(appoinmentId)
+        await Appointment.findByIdAndDelete(appoinmentId)
 
         return res
         .status(200)
@@ -100,8 +100,8 @@ const rescheduledAppoinment = asyncHandler( async (req,res)=>{
             throw new ApiError(304,"Appoinment Id and Datetime is neded")
         }
 
-        const calenderResponse = await createGoogleCalendarEvent( req,res )
-        const scheduledappoinment = await Appoinment.findByIdAndUpdate(
+        const calenderResponse = await createGoogleCalendarEvent( req,res );
+        const scheduledappoinment = await Appointment.findByIdAndUpdate(
             appoinmentId,req.teacher._id,
             {
                 $set:{
@@ -131,7 +131,7 @@ const rescheduledAppoinment = asyncHandler( async (req,res)=>{
 const appointmentReminder = asyncHandler ( async (req,res)=>{
     try {
         const dateTime = new Date();
-        const appoinment = await Appoinment.find({
+        const appoinment = await Appointment.find({
             'reminder.dateTime': {$lte:dateTime}
         });
 
@@ -160,6 +160,13 @@ const appointmentReminder = asyncHandler ( async (req,res)=>{
         throw new ApiError(404,"Reminder did not complete sucessfully ")
     }
 })
+
+export {
+    bookAppoinment,
+    cancelAppoinment,
+    rescheduledAppoinment,
+    appointmentReminder,
+};
 
 // book appoinment
 // cancel appoinment

@@ -1,16 +1,15 @@
-import mongoose, { Schema } from "mongoose" 
-import jwt from "jsonwebtoken"
+import mongoose, { Schema } from "mongoose" ;
 
-const appoinmentSchema = new Schema({
+const appointmentSchema = new Schema({
     student:{
         type: Schema.Types.ObjectId,
         ref : "Student",
-        required : true,
+        required:true,
     },
     teacher:{
         type : Schema.Types.ObjectId,
         ref : "Teacher",
-        required : true,
+        required:true,
     },
     dateTime : {
         type : Date,
@@ -27,14 +26,15 @@ const appoinmentSchema = new Schema({
     },
     cancellationReason:{
         type : String,
+        default: '',
     },
     reminders:{
-        type : String,
-        required : true,
+        type : [String],
+        required:[],
     },
 },{
     timestamps: true,
-})
+});
 
 
-const Appoinment = mongoose.model("Appoinment",appoinmentSchema)
+export const Appointment = mongoose.model("Appointment",appointmentSchema)

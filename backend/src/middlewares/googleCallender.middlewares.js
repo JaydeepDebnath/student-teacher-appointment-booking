@@ -1,16 +1,22 @@
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { OAuth2Client } from 'google-auth-library';
+import { fileURLToPath } from 'url';
+import { dirname,join } from 'path';
 import fs from 'fs';
-import readline from 'readline';
+import path from 'path';
 import { google } from 'googleapis';
-import Teacher from '../models/teacher.model.js';
+import { Teacher } from '../models/teacher.models.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Load client secrets from a local file 
-const credentials = JSON.parse(fs.readFileSync('credentials.json'))
+const credentialsPath = path.join(__dirname,'../../credentials.json')
+const credentials = JSON.parse(fs.readFileSync(credentialsPath))
 const { client_secret,client_id,redirect_uris } = credentials.installed;
 
-const oAuth2Client = new OAuth2Client( client_id,client_secret,redirect_uris[0] )
+const oAuth2Client = new OAuth2Client( client_id,client_secret,redirect_uris[0] );
 
 // Middlewares to aurthorize Google calender access for teacher
 
@@ -50,7 +56,7 @@ export const handleGoogleCallback = asyncHandler( async ( req,res,next )=>{
     }
 
     try {
-        const { tokens } = await oAuth2Client.getToken(code)
+        const { tokens } = await oAuth2Client.getToken(code);
         oAuth2Client.setCredentials(tokens);
 
         // Save updated tokens
@@ -71,10 +77,12 @@ export const handleGoogleCallback = asyncHandler( async ( req,res,next )=>{
 
 export const createGoogleCalendarEvent = asyncHandler( async ( req,res,next )=>{
     const calendar = google.calendar({version:'v3',auth:req.googleAuth });
+
+    const { summary = "Sample Event", location = "Sample Location", description = "Sample description" } = req.body;
     const event = {
-        summary : summary ||"Sample Event",
-        location: location || "Sample Location",
-        description : description || "Sample description",
+        summary : summary ,
+        location: location,
+        description : description,
         start: {
             dateTime : new Date().toISOString(),
             timeZone : 'America/Los_Angeles',
