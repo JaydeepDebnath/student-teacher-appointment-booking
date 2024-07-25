@@ -12,10 +12,6 @@ const teacherSchema = new Schema(
             trim: true,
             index: true
         },
-        fullname: {
-            type: String,
-            required: true
-        },
         email: {
             type: String,
             required: true,
@@ -43,6 +39,9 @@ const teacherSchema = new Schema(
         password: {
             type: String,
             required: true
+        },
+        refreshToken:{
+            type:String,
         },
         role: {
             type: String,

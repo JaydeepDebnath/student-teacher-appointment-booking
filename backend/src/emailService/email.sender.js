@@ -4,7 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Teacher } from "../models/teacher.models.js"
 
 const transporter = nodemailer.createTransport({
-    host : process.env.SMTP_SERVER_HOST, // Replace with your SMTP server host
+    host : process.env.SMTP_SERVER_HOST,
     port : process.env.PORT,
     secure:false,
     auth:{

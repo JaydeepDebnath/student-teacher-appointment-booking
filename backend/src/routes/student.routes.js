@@ -15,8 +15,9 @@ const router = Router();
 
 // Import router
 router.route("/register").post(registerStudent)
-router.route("/login").post(verifyJWT,loginStudent)
+router.route("/login").post(loginStudent)
 router.route("/logout").post(verifyJWT,logout)
+router.route("/refresh-token").post(refreshAccessToken)
 router.route("/change-password").post(verifyJWT,changeCurrentPassword)
 router.route("/update").patch(verifyJWT,updateAccountDetails)
 

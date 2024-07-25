@@ -6,6 +6,139 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken"
 import mongoose from "mongoose"
 
+const generateAccessAndRefreshToken = async(studentId)=>
+    {
+        try {
+          const student = await Student.findById(studentId) 
+          const accessToken = student.generateAccessToken()
+          const refreshToken = student.generateRefreshToken()
+    
+          student.refreshToken = refreshToken  //get refresh token from user
+          await student.save({validateBeforeSave : false})    // .save , save to the db.validteBeforeSave dosen't check any validation
+    
+          return {accessToken,refreshToken}
+    
+        } catch (error) {
+            throw new ApiError(500,"Something went wrong while generating refresh and access token")
+        }
+};
+
+const registerStudent = asyncHandler( async ( req,res )=>{
+    const { name, email,studentClass , contactNumber, password , department ,achademic_year, subject } = req.body
+    console.log(req.body)
+    if (
+        [ name, email,studentClass, contactNumber,department,subject, achademic_year, password]
+        .some((field) => field?.trim() === "")
+    ) {
+        throw new ApiError(404,"All fileds are requird ")
+    }
+
+    // const existedStudent = await Student.findOne({
+    //     $or: [{email},{name}]
+    // })
+
+    // if(!existedStudent){
+    //     throw new ApiError(400,`User with ${email} or ${contactNumber} or already exists`)
+    // }
+
+    const student = await Student.create({
+        name,
+        email,
+        studentClass,
+        contactNumber,
+        password,
+        department,
+        subject,
+        achademic_year,
+    })
+
+    const createdStudent = await Student.findById(student._id).select(
+        "-password -refreshToken"
+    )
+
+    if (!createdStudent){
+        throw new ApiError(500," Something went wrong ")
+    }
+
+    return res
+    .status(201)
+    .json(
+        new ApiResponse(200, createdStudent, "Student details registered Successfully")
+    )
+});
+
+
+const loginStudent = asyncHandler( async (req,res)=>{
+    const { name,password,email } = req.body;
+    console.log(req.body);
+    
+    if (!( name || email )){
+        throw new ApiError(400,"Contact Number or Password is required ")
+    }
+
+    const student = await Student.findOne({
+        $or : [{name},{email}]
+    });
+
+    if(!student){
+        throw new ApiError(400,"Student does not exists")
+    }
+
+    const isPasswordValid = await student.isPasswordCorrect(password)
+    if(!isPasswordValid){
+        throw new ApiError(400,"Invalid user credentials")
+    }
+
+    const { accessToken,refreshToken } = await generateAccessAndRefreshToken(student._id)
+
+    const loggedInStudent = await Student.findById(student._id).select
+    ("-password -refreshToken");
+
+    const options = {
+        httpOnly : true,   
+        secure : true
+       }
+    
+       return res
+       .status(200)
+       .cookie("accessToken",accessToken,options)
+       .cookie("refreshToken",refreshToken,options)
+       .json(
+        new ApiResponse(
+            200,{
+                student : loggedInStudent,accessToken,refreshToken
+            },
+            "Student logged in sucessfully"
+        )
+       )
+});
+
+const logout = asyncHandler( async ( req,res )=>{
+    await Student.findByIdAndUpdate(
+        req.student._id,   // query
+        {
+            $set :
+            {
+                refreshToken : undefined      // // which method need to update in db
+            }            
+        },
+        {
+            new : true , 
+        }
+    )
+
+    const options = {
+        httpOnly : true,    // cookies only modifieble by db,could not from frontend 
+        secure : true
+       }
+
+       return res
+       .status(200)
+       .clearCookie("accessToken",options)
+       .clearCookie("refreshToken",options)
+       .json(new ApiResponse(200,{},"Teacher logged out"))
+});
+
 const refreshAccessToken = asyncHandler(async(req,res)=>
     {
         const incomingRefreshToken = req.cookies.
@@ -54,137 +187,6 @@ const refreshAccessToken = asyncHandler(async(req,res)=>
         )
 });
 
-const generateAccessAndRefreshToken = async(userId)=>
-    {
-        try {
-          const student = await Student.findById(userId) 
-          const accessToken = Student.generateAccessToken()
-          const refreshToken = Student.generateRefreshToken()
-    
-          student.refreshToken = refreshToken  //get refresh token from user
-          await student.save({validateBeforeSave : false})    // .save , save to the db.validteBeforeSave dosen't check any validation
-    
-          return {accessToken,refreshToken}
-    
-        } catch (error) {
-            throw new ApiError(500,"Something went wrong while generating refresh and access token")
-        }
-};
-
-const registerStudent = asyncHandler( async ( req,res )=>{
-    const { name, email,studentClass , contactNumber, password , department ,achademic_year, subject } = req.body
-    if (
-        [ name, email,studentClass, contactNumber,department,subject, achademic_year, password]
-        .some((field) => field?.trim() === "")
-    ) {
-        throw new ApiError(404,"All fileds are requird ")
-    }
-
-    const existedStudent = await Student.findOne({
-        $or: [{email},{contactNumber}]
-    })
-
-    if(!existedStudent){
-        throw new ApiError(400,`User with ${email} or ${contactNumber} already exists`)
-    }
-
-    const student = await Student.create({
-        name: name.toLowerCase(),
-        email,
-        studentClass,
-        contactNumber,
-        password,
-        department,
-        subject,
-        achademic_year,
-    })
-
-    const createdStudent = await Student.findById(student._id).select(
-        "-password -refreshToken"
-    )
-
-    if (!createdStudent){
-        throw new ApiError(500," Something went wrong ")
-    }
-
-    return res
-    .status(201)
-    .json(
-        new ApiResponse(200, createdStudent, "Student details registered Successfully")
-    )
-});
-
-const loginStudent = asyncHandler( async (req,res)=>{
-    const { username,email,contactNumber,password } = req.body
-
-    if (!( username || email || contactNumber)){
-        throw new ApiError(400,"Username or Password or Contact Number is required ")
-    }
-
-    const student = await Student.findOne({
-        $or : [{username},{email},{contactNumber}]
-    })
-
-    if(!student){
-        throw new ApiError(400,"Teacher does not exists")
-    }
-
-    const isPasswordValid = await student.isPasswordCorrect(password)
-    if(!isPasswordValid){
-        throw new ApiError(400,"Invalid user credentials")
-    }
-
-    const { accessToken,refreshToken } = await generateAccessAndRefreshToken(student._id)
-
-    const loggedInStudent = await Student.findById(student._id).select
-    ("-password -refreshToken")
-
-    const options = {
-        httpOnly : true,   
-        secure : true
-       }
-    
-       return res
-       .status(200)
-       .cookie("accessToken",accessToken,options)
-       .cookie("refreshToken",refreshToken,options)
-       .json(
-        new ApiResponse(
-            200,{
-                student : loggedInStudent,accessToken,
-                refreshToken
-            },
-            "Student logged in sucessfully"
-        )
-       )
-});
-
-const logout = asyncHandler( async ( req,res )=>{
-    await Student.findByIdAndUpdate(
-        req.student._id,   // query
-        {
-            $set :
-            {
-                refreshToken : undefined      // // which method need to update in db
-            }            
-        },
-        {
-            new : true , 
-        }
-    )
-
-    const options = {
-        httpOnly : true,    // cookies only modifieble by db,could not from frontend 
-        secure : true
-       }
-
-       return res
-       .status(200)
-       .clearCookie("accessToken",options)
-       .clearCookie("refreshToken",options)
-       .json(new ApiResponse(200,{},"Teacher logged out"))
-});
-
 const changeCurrentPassword = asyncHandler(async(req,
     res)=>{
         const {oldPassword,newPassword} = req.body
@@ -211,18 +213,19 @@ const changeCurrentPassword = asyncHandler(async(req,
 
 const updateAccountDetails = asyncHandler(async(req,
     res)=>{
-        const {fullName,eamil,contactNumber} = req.body           // for update files , use a differnet method
+        const {name,department,eamil,contactNumber} = req.body           // for update files , use a differnet method
 
-        if(!(fullName || eamil || contactNumber)){
-           throw new ApiError(400,"All fields are required") 
+        if(!(name || eamil || department || contactNumber)){
+           throw new ApiError(400,"Any of these fields are required") 
         }
 
         const student = await Student.findByIdAndUpdate(
             req.student?._id,
             {
                 $set:{
-                    fullName,
+                    name,
                     eamil,
+                    department,
                     contactNumber,
                 }
             },

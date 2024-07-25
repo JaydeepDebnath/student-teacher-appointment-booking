@@ -34,13 +34,13 @@ const registerTeacher = asyncHandler( async ( req,res )=>{
         throw new ApiError(404,"All fileds are requird ")
     }
 
-    const existedTeacher = await Teacher.findOne({
-        $or: [{email},{contactNumber}]
-    })
+    // const existedTeacher = await Teacher.findOne({
+    //     $or: [{email},{contactNumber}]
+    // })
 
-    if(!existedTeacher){
-        throw new ApiError(400,`User with ${email} or ${contactNumber} already exists`)
-    }
+    // if(!existedTeacher){
+    //     throw new ApiError(400,`User with ${email} or ${contactNumber} already exists`)
+    // }
 
     const teacher = await Teacher.create({
         username: username.toLowerCase(),
@@ -68,15 +68,16 @@ const registerTeacher = asyncHandler( async ( req,res )=>{
 });
 
 const loginTeacher = asyncHandler( async (req,res)=>{
-    const { username,email,contactNumber,password } = req.body
+    const { username,email,password } = req.body
+    console.log(req.body)
 
-    if (!( username || email || contactNumber)){
+    if (!( username || password)){
         throw new ApiError(400,"Username or Password or Contact Number is required ")
     }
 
     const teacher = await Teacher.findOne({
-        $or : [{username},{email},{contactNumber}]
-    })
+        $or : [{username},{email}]
+    }).select("+password +refreshToken");
 
     if(!teacher){
         throw new ApiError(400,"Teacher does not exists")
@@ -89,7 +90,7 @@ const loginTeacher = asyncHandler( async (req,res)=>{
 
     const { accessToken,refreshToken } = await generateAccessAndRefreshToken(teacher._id)
 
-    const loggedInUser = await Teacher.findById(teacher._id).select
+    const loggedInTeacher = await Teacher.findById(teacher._id).select
     ("-password -refreshToken")
 
     const options = {
@@ -104,7 +105,7 @@ const loginTeacher = asyncHandler( async (req,res)=>{
        .json(
         new ApiResponse(
             200,{
-                teacher : loggedInUser,accessToken,
+                teacher : loggedInTeacher,accessToken,
                 refreshToken
             },
             "Teacher logged in sucessfully"
