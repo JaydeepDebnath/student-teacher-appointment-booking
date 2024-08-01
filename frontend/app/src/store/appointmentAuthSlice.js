@@ -22,7 +22,7 @@ export const fetchAppointments = createAsyncThunk(
 );
 
 export const bookAppointment = createAsyncThunk(
-    '/appointment/book',
+    'appointment/book',
     async(appointmentData,thunkAPI) => {
         try {
             const response = await axios.post(`${API_BASE_URL}/book`,appointmentData)
@@ -33,7 +33,7 @@ export const bookAppointment = createAsyncThunk(
     }
 );
 export const cancelAppointment = createAsyncThunk(
-    '/appointment/cancel',
+    'appointment/cancel',
     async(id,thunkAPI) => {
         try {
             const response = await axios.post(`${API_BASE_URL}/cancel/${id}`)
@@ -44,7 +44,7 @@ export const cancelAppointment = createAsyncThunk(
     }
 );
 export const rescheduleAppointment = createAsyncThunk(
-    '/appointment/reschedule',
+    'appointment/reschedule',
     async({ id, appointmentData },thunkAPI) => {
         try {
             const response = await axios.post(`${API_BASE_URL}/reschedule/${id}`,appointmentData)
@@ -55,7 +55,7 @@ export const rescheduleAppointment = createAsyncThunk(
     }
 );
 export const reminderAppointment = createAsyncThunk(
-    '/appointment/reminder',
+    'appointment/reminder',
     async({ id, appointmentData },thunkAPI) => {
         try {
             const response = await axios.post(`${API_BASE_URL}/reminder/${id}`,appointmentData)
@@ -70,8 +70,9 @@ export const reminderAppointment = createAsyncThunk(
 const appointmentAuthSlice = createSlice({
   name:"appointmentAuth",
   initialState,
-  reducers : (builder) => {
-    builder
+  reducers: {},
+  extraReducers : (builder) => {
+  builder
     .addCase(fetchAppointments.pending, (state) => {
       state.loading = true;
     })
@@ -82,7 +83,7 @@ const appointmentAuthSlice = createSlice({
     })
     .addCase(fetchAppointments.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload.message;
+        state.error = action.payload?.message || 'An error occurred';;
     })
     .addCase(bookAppointment.fulfilled,(state,action) => {
         state.loading = false;
@@ -93,7 +94,7 @@ const appointmentAuthSlice = createSlice({
       state.loading = false;
       const index = state.appointments.findIndex(appointment => appointment._id === action.payload._id);
       if (index !== -1) {
-          state.appointments[index] = action.payload;
+          state.appointments.splice(index,1)
         }
         state.error = null;
     })
@@ -106,8 +107,7 @@ const appointmentAuthSlice = createSlice({
       state.error = null;
     })
     .addCase(reminderAppointment.fulfilled,(state,action) => {
-      state.appointmentData = action.payload.appointmentData ;
-      state.staus = 'succeeded';
+      state.loading = false;
       state.error = null;
     })
     .addCase(reminderAppointment.rejected, (state,action) => {
@@ -117,7 +117,8 @@ const appointmentAuthSlice = createSlice({
     .addMatcher(
       action => [fetchAppointments.pending,bookAppointment.pending,
         rescheduleAppointment.pending,cancelAppointment.pending,
-        reminderAppointment.pending].includes(action.type),
+        reminderAppointment.pending]
+        .includes(action.type),
         (state) => {
           state.loading = true;
         }
@@ -125,7 +126,7 @@ const appointmentAuthSlice = createSlice({
   }, 
 });
 
-export const selectAppointments = state => state.appointments.appointments;
-export const selectLoading = state => state.appointments.loading;
+export const selectAppointments = state => state.appointmentAuth.appointments;
+export const selectLoading = state => state.appointmentAuth.loading;
 
 export default appointmentAuthSlice.reducer;

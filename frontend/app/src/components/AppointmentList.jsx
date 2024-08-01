@@ -1,20 +1,24 @@
 import React from "react";
+import AppointmentCard from "./AppointmentCard";
 
-const AppointmentList = ({appointments, onUpdate, onCancel}) => {
+const AppointmentList = ({appointments, onUpdate, onCancel,onReminder}) => {
  return (
-    <div>
-      <h3>Appointment List</h3>
-      <ul>
-        {appointments.map(appointment => (
-          <li key={appointment._id}>
-            {appointment.student.name} - {appointment.teacher.name} - {appointment.dateTime}
-            <button onClick={() => onUpdate(appointment._id, { status: 'completed' })}>Complete</button>
-            <button onClick={() => onCancel(appointment._id)}>Cancel</button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+  <div className="mt-6">
+            {appointments.length === 0 ? (
+                <p className="text-center text-gray-500">No appointments scheduled</p>
+            ) : (
+                appointments.map(app => (
+                    <AppointmentCard
+                        key={app._id}
+                        appointment={app}
+                        onUpdate={onUpdate}
+                        onCancel={onCancel}
+                        onReminder={onReminder}
+                    />
+                ))
+            )}
+        </div>
+    );
 }
 
 export default AppointmentList;

@@ -37,6 +37,10 @@ const studentSchema = new Schema(
             type: String,
             required: [true, "Password is required"]
         },
+        role:{
+            type:String,
+            default:'student'
+        },
         achademic_year: { 
             type: String,
             required: true,

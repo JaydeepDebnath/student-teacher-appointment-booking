@@ -1,15 +1,15 @@
 import React from 'react'
 import { useDispatch } from 'react-redux'
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { logout } from '../store/teacherAuthSlice';
 
 function TeacherLogout() {
    const dispatch = useDispatch();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     dispatch(logout());
-    history.push('/login');
+    navigate('/login');
   };
 
 return (

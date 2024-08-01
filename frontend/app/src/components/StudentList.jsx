@@ -1,5 +1,4 @@
 import React,{useEffect} from "react";
-import {content} from 'redux'
 import { fetchStudents } from "../store/actions";
 
 const StudentList = ({ students, fetchStudents }) => {

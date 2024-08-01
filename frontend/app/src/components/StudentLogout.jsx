@@ -1,15 +1,15 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { logout } from '../store/studentAuthSlice';
 
 const StudentLogout = () => {
   const dispatch = useDispatch();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     dispatch(logout());
-    history.push('/login'); // Redirect to login page after logout
+    navigate('/login'); // Redirect to login page after logout
   };
 
   return (

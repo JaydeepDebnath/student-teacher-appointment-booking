@@ -1,124 +1,60 @@
-import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { useHistory } from 'react-router-dom';
-import {loginStudent} from '../store/studentAuthSlice.js'
+import React from 'react'
+import { loginStudent } from '../store/studentAuthSlice'
+import { useDispatch } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+import {useForm} from 'react-hook-form'
 
-const studentLogin = () => {
-  const dispatch = useDispatch();
-  const history = useHistory();
-  const [formData,setFormData ] = useState({
-    username:'',
-    email:'',
-    studentClass:'',
-    department:'',
-    password:'',
-    contactNumber:'',
-    achademic_year:''
-  });
 
-  const {username,
-    email,
-    studentClass,
-    department,
-    password,
-    contactNumber,
-    achademic_year} = formData;
 
-  const onChange = (e) => {
-    setFormData({...formData,[e.target.name]:e.target.value});
-  };
+function StudentLogIn() {
+const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const {register,handleSubmit} = useForm()
+  const [error,setError] = useState(null)
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
+  const login = async (data) => {
     try {
-      await dispatch(loginStudent({username,email,
-        contactNumber,studentClass,
-        department,password,achademic_year}));
-      history.push('/')
+     dispatch(loginStudent({
+      name:data.name,
+      email:data.email,
+      password:data.password,
+      }))
+      navigate('/dashboard');
     } catch (error) {
-      console.error('Student login failed:',error)
-      throw new Error('Student login failed:',error)
+      console.error('Teacher Login failed:', error);
+      throw new Error('Teacher Login failed:',error)        
     }
-  };
-
+  }
   return (
     <div>
-      <h2>Student Login Page</h2>
-      <form onSubmit={onSubmit}>
+      <h1>Student Login</h1>
+      <form onSubmit={handleSubmit(login)}>
         <div>
-          <label>Username</label>
           <input
-            type="username"
-            name="username"
-            value={username}
-            onChange={onChange}
-            required
+            type="text"
+            label='Username/Email'
+            placeholder="Username or Email is required"
+            {...register("email", {
+              required: "Email is required",
+              pattern: {
+                value: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+                message: "Email address must be a valid address"
+              }
+            })}
           />
         </div>
         <div>
-          <label>Email</label>
-          <input
-            type="email"
-            name="email"
-            value={email}
-            onChange={onChange}
-            required
-          />
-        </div>
-        <div>
-          <label>Class</label>
-          <input
-            type="studentClass"
-            name="studentClass"
-            value={studentClass}
-            onChange={onChange}
-            required
-          />
-        </div>
-        <div>
-          <label>Department</label>
-          <input
-            type="department"
-            name="department"
-            value={department}
-            onChange={onChange}
-            required
-          />
-        </div>
-        <div>
-          <label>Password</label>
           <input
             type="password"
-            name="password"
-            value={password}
-            onChange={onChange}
-            required
+            placeholder="Password"
+            {...register("password", { required: "Password is required" })}
           />
         </div>
-        <div>
-          <label>Contact Number</label>
-          <input
-            type="contactNumber"
-            name="contactNumber"
-            value={contactNumber}
-            onChange={onChange}
-            required
-          />
-        </div>
-        <div>
-          <label>Achademic Year</label>
-          <input
-            type="achademic_year"
-            name="achademic_year"
-            value={achademic_year}
-            onChange={onChange}
-            required
-          />
-        </div>
-        <button type="submit">Login</button>
+        <Button type="submit">Log In</Button>
       </form>
+      {error && <p>{error}</p>}
     </div>
   );
-};
+}
 
-export default studentLogin;
+export default StudentLogIn
