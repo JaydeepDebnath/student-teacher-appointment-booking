@@ -5,6 +5,7 @@ import Button from './Button'
 import Input from './Input'
 import { useDispatch } from 'react-redux'
 import {useForm} from 'react-hook-form'
+import SignUp from '../pages/SignUp'
 
 
 function TeacherLogin() {
@@ -66,7 +67,7 @@ function TeacherLogin() {
         </form>
         <p className="mt-4 text-center text-gray-600">
           Don't have an account?{' '}
-          <Link to="/signup" className="text-purple-600 hover:underline">
+          <Link to="/" className="text-purple-600 hover:underline">
             SignUp here
           </Link>
         </p>

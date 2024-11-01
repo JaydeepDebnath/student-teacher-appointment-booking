@@ -41,6 +41,10 @@ const StudentSignUp = () => {
     }
   };
 
+  const handleLoginRedirect = () => {
+    navigate('/login');
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-200 p-6">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg border border-gray-300">
@@ -141,9 +145,18 @@ const StudentSignUp = () => {
             type="submit"
             className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition duration-150"
           >
-            Sign Up
+            SignUp
           </button>
         </form>
+        <div className="mt-4 text-center">
+          <p className="text-sm text-gray-600">Already have an account?</p>
+          <button
+            onClick={handleLoginRedirect}
+            className="text-blue-600 hover:underline"
+          >
+            Login  
+          </button>
+        </div>
       </div>
     </div>
   );

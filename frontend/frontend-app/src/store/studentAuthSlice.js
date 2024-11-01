@@ -35,6 +35,18 @@ export const loginStudent = createAsyncThunk(
     }
 );
 
+export const studentProfile = createAsyncThunk(
+    'auth/student/profile',
+    async (credentials, thunkAPI) => {
+        try {
+            const response = await axios.post(`${API_BASE_URL}/profile`, credentials);
+            return response.data;
+        } catch (error) {
+            return thunkAPI.rejectWithValue(error.response.data);
+        }
+    }
+);
+
 export const changePassword = createAsyncThunk(
     'student/change-password',
     async (credentials, thunkAPI) => {
@@ -93,6 +105,11 @@ const studentAuthSlice = createSlice({
       state.user = action.payload.studentData;
       state.status = 'succeeded'
     })
+    .addCase(studentProfile.fulfilled,(state,action) => {
+        state.isAuthenticated = true;
+        state.user = action.payload.studentData;
+        state.status = 'succeeded'
+      })
     .addCase(changePassword.fulfilled,(state,action) => {
       state.isAuthenticated = true;
       state.user = action.payload.studentData;

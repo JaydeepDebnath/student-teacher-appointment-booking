@@ -113,6 +113,35 @@ const loginTeacher = asyncHandler( async (req,res)=>{
        )
 });
 
+const userProfile = asyncHandler( async (req,res) => {
+    const { username,
+            email,
+            contactNumber,
+            department} = req.body;
+
+try {
+        const userData= await Student.findById(
+            req.student._id,
+            {
+                name:username,
+                email:email,
+                studentClass:studentClass,
+                contactNumber:contactNumber,
+                department:department,
+            }
+        )
+
+
+        if (!userData) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json(userData);
+} catch (error) {
+    res.status(500).json({ message: 'User profile error', error });
+}
+})
+
 const logout = asyncHandler( async ( req,res )=>{
     await Teacher.findByIdAndUpdate(
         req.teacher._id,   // query
@@ -297,6 +326,7 @@ export {
 generateAccessAndRefreshToken,
 registerTeacher,
 loginTeacher,
+userProfile,
 logout,
 refreshAccessToken,
 changeCurrentPassword,

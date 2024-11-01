@@ -2,6 +2,7 @@ import {
     refreshAccessToken,
     registerStudent,
     loginStudent,
+    userProfile,
     logout,
     changeCurrentPassword,
     updateAccountDetails,
@@ -17,6 +18,7 @@ const router = Router();
 router.route("/register").post(registerStudent)
 router.route("/login").post(loginStudent)
 router.route("/logout").post(verifyJWT,logout)
+router.route("/profile").get(verifyJWT,userProfile)
 router.route("/refresh-token").post(refreshAccessToken)
 router.route("/change-password").post(verifyJWT,changeCurrentPassword)
 router.route("/update").patch(verifyJWT,updateAccountDetails)

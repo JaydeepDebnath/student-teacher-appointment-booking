@@ -44,6 +44,9 @@ const TeacherSignUp = () => {
       throw new Error('Teacher SignUp failed:',error)
     }
   };
+  const handleLoginRedirect = () => {
+    navigate('/login');
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-200 p-6">
@@ -149,6 +152,15 @@ const TeacherSignUp = () => {
             Sign Up
           </button>
         </form>
+        <div className="mt-4 text-center">
+          <p className="text-sm text-gray-600">Already have an account?</p>
+          <button
+            onClick={handleLoginRedirect}
+            className="text-blue-600 hover:underline"
+          >
+            Login  
+          </button>
+        </div>
       </div>
     </div>
   );
