@@ -14,7 +14,7 @@ const navigate = useNavigate()
 
   const login = async (data) => {
     try {
-     dispatch(loginStudent({
+      dispatch(loginStudent({
       name:data.name,
       email:data.email,
       password:data.password,
