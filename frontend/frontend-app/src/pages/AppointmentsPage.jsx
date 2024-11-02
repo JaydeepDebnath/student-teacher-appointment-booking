@@ -20,7 +20,7 @@ const AppointmentsPage = () => {
  const loading = useSelector(selectLoading);
  const [showForm,setShowForm] = useState(false);
 
- useEffect(() => {
+ useEffect(() => { 
  dispatch(fetchAppointments());
  },[dispatch])
 
