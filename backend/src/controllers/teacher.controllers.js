@@ -8,17 +8,22 @@ import mongoose from "mongoose"
 import { response } from "express"
 
 
-const generateAccessAndRefreshToken = async(userId)=>
+const generateAccessAndRefreshToken = async(teacherId)=>
     {
         try {
-          const teacher = await Teacher.findById(userId) 
-          const accessToken = Teacher.generateAccessToken()
-          const refreshToken = Teacher.generateRefreshToken()
+          const teacher = await Teacher.findById(teacherId);
+
+          if (!teacher) {
+            throw new ApiError(404, "Teacher not found");
+            }
     
+          const accessToken = teacher.generateAccessToken()
+          const refreshToken = teacher.generateRefreshToken()
+
           teacher.refreshToken = refreshToken  //get refresh token from user
           await teacher.save({validateBeforeSave : false})    // .save , save to the db.validteBeforeSave dosen't check any validation
     
-          return {accessToken,refreshToken}
+          return {accessToken,refreshToken};
     
         } catch (error) {
             throw new ApiError(500,"Something went wrong while generating refresh and access token")

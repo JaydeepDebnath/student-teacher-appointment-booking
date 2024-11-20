@@ -1,5 +1,4 @@
 'use client';
-
 import React,{useEffect, useState} from "react";
 import {useSelector,useDispatch } from 'react-redux';
 import Button from "../components/Button";
@@ -14,36 +13,40 @@ import { updateAccount as updateTeacherAccount } from "../store/teacherAuthSlice
 
 
 
-export const handleDashboard = async () => {
+export const HandleDashboard = async () => {
     const dispatch = useDispatch();
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const {appointments,loading,error} = useSelector(state => state.appointmentAuth);
-    const {accountInfo,setAccountInfo} = useState({
+    const [accountInfo,setAccountInfo] = useState({
         name:"",
         eamil:"",
-        contactNumber:"", 
-    })
-    const userRole = useSelector(state => state.user.role)
+        contactNumber:"",
+    });
+    const [editMode,setEditMode] = useState(false)
+    const {role} = useSelector(state => state.user || {} )
 
 
     useEffect(() => {
-        dispatch(studentProfile());
-        dispatch(teacherProfile());
-        },[dispatch])
+        if(role === 'student'){
+            dispatch(studentProfile());
+        }else if(role === 'teacher'){
+            dispatch(teacherProfile());
+        }
+        },[dispatch,role])
     
 
     const handleChangePassword = (e) => {
         e.preventDefault();
 
         if(newPassword !== confirmPassword){
-            alert("password does not match!");
+          toast.error("Passwords do not match!");
             return;
         }
         try {
-            if(userRole === 'student'){
+            if(role === 'student'){
                 dispatch(StudentPassword({password:newPassword}));
-            } else if(userRole === 'teacher'){
+            } else if(role === 'teacher'){
                 dispatch(TeacherPassword({ password: newPassword }));
             setNewPassword('');
             alert("Password changed successfully");
@@ -57,9 +60,9 @@ export const handleDashboard = async () => {
     const updateAccount =(e) =>{
         e.preventDefault();
         try {
-            if (userRole === 'student') {
+            if (role === 'student') {
                 dispatch(updateStudentAccount({ studentData: accountInfo }));
-            } else if (userRole === 'teacher') {
+            } else if (role === 'teacher') {
                 dispatch(updateTeacherAccount({ teacherData: accountInfo }));
             }
             alert("Account updated successfully")
@@ -78,94 +81,80 @@ export const handleDashboard = async () => {
         }
     }
 
+    return (
+      <div className="dashboard">
+          <h1>Dashboard</h1>
+          <div className="profile-section">
+              <h2>Your Profile</h2>
+              <p>Name: {accountInfo.name}</p>
+              <p>Email: {accountInfo.email}</p>
+              <p>Contact Number: {accountInfo.contactNumber}</p>
+              <button onClick={() => setEditMode(true)}>Edit Profile</button>
+          </div>
 
-    return(
-        <div className="container mx-auto p-6">
-            <h1 className="text-2xl font-bold mb-6">User Dashboard</h1>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Account Information Section */}
-                <div className="bg-white shadow-md rounded-lg p-6">
-                    <h2 className="text-xl font-semibold mb-4">Account Information</h2>
-                    <form onSubmit={updateAccount}>
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium mb-2">Name</label>
-                            <input
-                                type="text"
-                                value={accountInfo.name}
-                                onChange={(e) => setAccountInfo({ ...accountInfo, name: e.target.value })}
-                                className="w-full border border-gray-300 rounded-md p-2"
-                                required
-                            />
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium mb-2">Email</label>
-                            <input
-                                type="email"
-                                value={accountInfo.email}
-                                onChange={(e) => setAccountInfo({ ...accountInfo, email: e.target.value })}
-                                className="w-full border border-gray-300 rounded-md p-2"
-                                required
-                            />
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium mb-2">Contact Number</label>
-                            <input
-                                type="tel"
-                                value={accountInfo.contactNumber}
-                                onChange={(e) => setAccountInfo({ ...accountInfo, contactNumber: e.target.value })}
-                                className="w-full border border-gray-300 rounded-md p-2"
-                                required
-                            />
-                        </div>
-                        <Button type="submit" className="w-full bg-blue-500 text-white py-2 rounded">Update Account</Button>
-                    </form>
-                </div>
+          {editMode && (
+              <form onSubmit={updateAccount}>
+                  <label>Name</label>
+                  <input
+                      type="text"
+                      value={accountInfo.name}
+                      onChange={(e) => setAccountInfo({ ...accountInfo, name: e.target.value })}
+                  />
+                  <label>Email</label>
+                  <input
+                      type="email"
+                      value={accountInfo.email}
+                      onChange={(e) => setAccountInfo({ ...accountInfo, email: e.target.value })}
+                  />
+                  <label>Contact Number</label>
+                  <input
+                      type="text"
+                      value={accountInfo.contactNumber}
+                      onChange={(e) => setAccountInfo({ ...accountInfo, contactNumber: e.target.value })}
+                  />
+                  <button type="submit">Save Changes</button>
+              </form>
+          )}
 
-                {/* Change Password Section */}
-                <div className="bg-white shadow-md rounded-lg p-6">
-                    <h2 className="text-xl font-semibold mb-4">Change Password</h2>
-                    <form onSubmit={handleChangePassword}>
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium mb-2">New Password</label>
-                            <input
-                                type="password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                className="w-full border border-gray-300 rounded-md p-2"
-                                required
-                            />
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium mb-2">Confirm Password</label>
-                            <input
-                                type="password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full border border-gray-300 rounded-md p-2"
-                                required
-                            />
-                        </div>
-                        <Button type="submit" className="w-full bg-blue-500 text-white py-2 rounded">Change Password</Button>
-                    </form>
-                </div>
-            </div>
+          <div className="change-password">
+              <h3>Change Password</h3>
+              <form onSubmit={handleChangePassword}>
+                  <label>New Password</label>
+                  <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                  <label>Confirm Password</label>
+                  <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                  <button type="submit">Change Password</button>
+              </form>
+          </div>
 
-            {/* Appointments Section */}
-            <div className="bg-white shadow-md rounded-lg p-6 mt-6">
-                <h2 className="text-xl font-semibold mb-4">Appointments</h2>
-                <Button onClick={appointmentStatus} className="bg-blue-500 text-white py-2 rounded">Fetch Appointments</Button>
-                {loading && <p className="mt-4">Loading...</p>}
-                {error && <p className="mt-4 text-red-500">{error}</p>}
-                <ul className="mt-4">
-                    {appointments.map(appointment => (
-                        <li key={appointment.id} className="border-b py-2">{appointment.title}</li>
-                    ))}
-                </ul>
-            </div>
-        </div>
-    )
-}
+          <div className="appointments-section">
+              <h3>Appointments</h3>
+              {loading ? (
+                  <p>Loading appointments...</p>
+              ) : error ? (
+                  <p>Error fetching appointments: {error}</p>
+              ) : (
+                  <ul>
+                      {Array.isArray(appointments) && appointments.map((appointment) => (
+                          <li key={appointment.id}>
+                              <p>Appointment with: {appointment.teacherName}</p>
+                              <p>Date: {appointment.date}</p>
+                              <p>Status: {appointment.status}</p>
+                          </li>
+                      ))}
+                  </ul>
+              )}
+          </div>
+      </div>
+  );
+};
 
-
-export default handleDashboard;
+export default HandleDashboard;

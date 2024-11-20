@@ -7,6 +7,7 @@ const initialState = {
    isAuthenticated: false,
    insights: null,
    error:null,
+   role:'guest',
 }
 
 const API_BASE_URL = 'http://localhost:8000/api/teacher';

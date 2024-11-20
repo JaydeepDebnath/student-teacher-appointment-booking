@@ -6,7 +6,7 @@ import { Provider } from 'react-redux'
 import { RouterProvider,createBrowserRouter } from 'react-router-dom'
 import Login from './pages/Login.jsx'
 import SignUp from './pages/SignUp.jsx'
-import { handleDashboard } from './pages/Dashboard.jsx'
+import { HandleDashboard } from './pages/Dashboard.jsx'
 import TeacherSignupPage from './pages/TeacherSignupPage.jsx'
 import StudentSignupPage from './pages/StudentSignupPage.jsx'
 import AppointmentsPage from './pages/AppointmentsPage.jsx'
@@ -35,7 +35,7 @@ const router = createBrowserRouter([
   },
   {
     path:'/dashboard',
-    element:<handleDashboard/>
+    element:<HandleDashboard/>
   },
 ]);
 
